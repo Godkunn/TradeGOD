@@ -3,6 +3,9 @@ import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import threading
 import logging
+import time
+import requests
+from telebot.apihelper import ApiTelegramException
 
 from config.settings import TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, SYMBOLS, CAPITAL_USDT
 
@@ -25,9 +28,36 @@ class TelegramUI:
         self._start_polling()
 
     def _start_polling(self):
-        thread = threading.Thread(target=self.bot.infinity_polling, daemon=True)
+        """Starts a background supervisor thread to manage bot polling."""
+        thread = threading.Thread(target=self._start_polling_supervisor, daemon=True)
         thread.start()
         self.send_alert("🟢 <b>TradeGOD Command Center Online</b>\nType /start to access the terminal.")
+
+    def _start_polling_supervisor(self):
+        """Infinite loop that restarts polling if it crashes due to network/timeout errors."""
+        while self.active:
+            try:
+                logger.info("📡 Telegram Polling Supervisor: Starting engine...")
+                # Increase timeouts for higher resilience on weak connections
+                self.bot.infinity_polling(timeout=60, long_polling_timeout=60)
+            except Exception as e:
+                logger.error(f"⚠️ Telegram Polling Failure: {e}")
+                logger.info("⏳ Supervisor: Retrying in 10 seconds...")
+                time.sleep(10)
+
+    def _safe_send_message(self, chat_id, text, **kwargs):
+        """Production wrapper for send_message to handle network/API errors without crashing."""
+        if not self.active: return None
+        
+        for attempt in range(3): # Retry up to 3 times
+            try:
+                return self.bot.send_message(chat_id, text, **kwargs)
+            except (ApiTelegramException, requests.exceptions.RequestException) as e:
+                logger.warning(f"⚠️ Send failed (Attempt {attempt+1}/3): {e}")
+                if attempt == 2: # Last attempt
+                    logger.error("🛑 Failed to send message after 3 attempts.")
+                time.sleep(2)
+        return None
 
     def _setup_handlers(self):
         @self.bot.message_handler(commands=['start', 'menu'])
@@ -39,7 +69,7 @@ class TelegramUI:
                 "╚═════════════════════════╝\n\n"
                 "<i>System is patrolling the markets...</i>"
             )
-            self.bot.reply_to(message, text, reply_markup=self._main_menu())
+            self._safe_send_message(message.chat.id, text, reply_markup=self._main_menu())
 
         # Added /profile as an alias for /portfolio
         @self.bot.message_handler(commands=['portfolio', 'profile'])
@@ -129,13 +159,13 @@ class TelegramUI:
                 f"{pos_status}\n"
                 "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             )
-            self.bot.send_message(self.chat_id, msg, reply_markup=self._main_menu())
+            self._safe_send_message(self.chat_id, msg, reply_markup=self._main_menu())
         except Exception as e:
-            self.bot.send_message(self.chat_id, f"⚠️ Error: {e}")
+            self._safe_send_message(self.chat_id, f"⚠️ Error: {e}")
 
     def _emergency_close(self, message):
         """Panic Button: Cancels all open orders and market sells the asset"""
-        self.bot.send_message(self.chat_id, "⚠️ <b>EXECUTING EMERGENCY KILL SWITCH...</b>")
+        self._safe_send_message(self.chat_id, "⚠️ <b>EXECUTING EMERGENCY KILL SWITCH...</b>")
         try:
             sold_any = False
             for sym in SYMBOLS:
@@ -158,16 +188,16 @@ class TelegramUI:
                     if qty > 0:
                         try:
                             self.sniper._place_market_order(sym, "SELL", qty)
-                            self.bot.send_message(self.chat_id, f"✅ <b>SUCCESS:</b> Sold {qty} {base_asset} at Market Price. Orders cleared.")
+                            self._safe_send_message(self.chat_id, f"✅ <b>SUCCESS:</b> Sold {qty} {base_asset} at Market Price. Orders cleared.")
                             sold_any = True
                         except Exception as e:
-                            self.bot.send_message(self.chat_id, f"❌ <b>FAILED to sell {sym}:</b> {e}")
+                            self._safe_send_message(self.chat_id, f"❌ <b>FAILED to sell {sym}:</b> {e}")
             
             if not sold_any:
-                self.bot.send_message(self.chat_id, "ℹ️ No active position to sell. All open orders cleared.")
+                self._safe_send_message(self.chat_id, "ℹ️ No active position to sell. All open orders cleared.")
         except Exception as e:
-            self.bot.send_message(self.chat_id, f"❌ <b>KILL SWITCH FATAL ERROR:</b> {e}")
+            self._safe_send_message(self.chat_id, f"❌ <b>KILL SWITCH FATAL ERROR:</b> {e}")
 
     def send_alert(self, text):
         if self.active:
-            self.bot.send_message(self.chat_id, text)
+            self._safe_send_message(self.chat_id, text)
