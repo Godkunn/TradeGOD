@@ -1,136 +1,83 @@
-# TradeGOD System v1.0
-> Emotionless. 24/7. Math-only. Multi-confirmation Binance Sniper Bot.
+# ⚡ TradeGOD System v2.0 ⚡
+> **The Quantitative Overlord.** Multi-Coin Scanner. Emotionless Execution. 24/7 Production Deployment.
 
-## Architecture
-```
-[HTF 1h Data] → ALPHA FILTER → [Zone Active?]
-                                      ↓ YES
-[LTF 5m Data] → BETA FILTER  → [Confidence ≥ 40?]
-                                      ↓ YES
-               RISK OVERLORD → [2% rule + min notional + R:R]
-                                      ↓ APPROVED
-                               EXECUTE ORDER (Market + OCO)
-```
+![TradeGOD Banner](assets/tradegod_banner.png)
 
-## Project Structure
+## 🏆 The Vision
+TradeGOD is not just a script; it is a **Quantitative Fund Management Engine**. Built for professional retail traders who demand institutional-grade execution on a decentralized scale. 
+
+Version 2.0 introduces the **Multi-Market Scanner**, allowing the bot to simultaneously track, evaluate, and prioritize the best trade setups across a customized basket of crypto assets (BTC, ETH, SOL, BNB, etc.) while maintaining a strict "One Position" risk-first doctrine.
+
+---
+
+## 🚀 Key Features (v2.0)
+
+### 🧺 Multi-Coin "Best-of-Breed" Scanner
+- **Parallel Scanning**: Monitors multiple symbols from your `.env` simultaneously.
+- **Smart Prioritization**: If multiple coins hit a valid setup at the same time, the bot automatically selects the one with the highest **Statistical Confidence Score**.
+- **Single-Exposure Doctrine**: Enforces a strict one-position-at-a-time limit to protect your capital.
+
+### 📱 God-Mode Telegram Terminal
+- **Supervisor Loop**: Self-healing connection logic. If Telegram’s API lags or your network drops, the bot automatically reconnects in seconds.
+- **Safe-Send Messaging**: Robust retries for all alerts. No trade alert is ever lost to a "Timeout Error."
+- **Live Portfolio Tracking**: Real-time entry prices, buy prices, and PnL breakdown directly from your phone.
+- **Emergency Kill Switch**: Instant, one-tap liquidation of all active positions and cancellation of all open OCO orders.
+
+### 🛡️ 3-Layer Quantitative Filter
+1.  **ALPHA (HTF)**: Trend enforcement using 1h SMA/ADX and Macro Support/Resistance zones.
+2.  **BETA (LTF)**: Execution trigger based on 5m rejection wicks, engulfing patterns, and false-breakout traps.
+3.  **RISK OVERLORD**: Final gatekeeper ensuring 2% max risk per trade, Binance-compliant lot sizing, and a 3% daily loss circuit breaker.
+
+---
+
+## 📂 Project Structure
 ```
 TradeGOD_System/
 ├── config/
-│   └── settings.py          ← All parameters live here
+│   └── settings.py          ← System parameters & symbol logic
 ├── core/
-│   ├── alpha_filter.py      ← Layer 1: Trend + ADX + SR zones (1h)
-│   ├── beta_filter.py       ← Layer 2: Patterns + RSI + Volume (5m)
-│   └── risk_overlord.py     ← Layer 3: Position sizing + circuit breaker
+│   ├── alpha_filter.py      ← Layer 1: Macro Overlord
+│   ├── beta_filter.py       ← Layer 2: Pattern Trigger
+│   ├── risk_overlord.py     ← Layer 3: Risk Compliance
+│   └── telegram_ui.py       ← Production-grade Command Center
 ├── engines/
-│   └── binance_sniper.py    ← Main bot execution loop
+│   ├── binance_sniper.py    ← Multi-coin scanner execution engine
+│   └── dhan_intraday.py     ← (Optional) Indian Equities Engine
 ├── tests/
-│   └── backtester.py        ← Offline walk-forward backtester
-├── docs/
-│   ├── The_Doctrine.txt     ← Human-readable trading rules
-│   └── Trade_Logs.csv       ← Auto-generated trade history
-├── logs/
-│   └── tradegod.log         ← Auto-generated runtime logs
-├── main.py                  ← Entry point
-├── requirements.txt
-├── render.yaml              ← Render.com deployment config
-└── .env.example             ← Environment variables template
+│   └── backtester.py        ← Offline walk-forward strategy tester
+├── main.py                  ← Entry point (Routing & Keep-Alive)
+├── keep_alive.py            ← Heartbeat server for 24/7 Render uptime
+├── requirements.txt         ← Dependency Manifest
+└── render.yaml              ← Cloud deployment template
 ```
 
 ---
 
-## Quick Start
+## 🛠️ Deployment (Production Level)
 
-### Step 1 — Install
-```bash
-git clone <your-repo>
-cd TradeGOD_System
-pip install -r requirements.txt
-```
-
-### Step 2 — Configure
-```bash
-cp .env.example .env
-# Edit .env — paste your Binance Testnet API keys
-```
-Get free Testnet keys: https://testnet.binance.vision/
-
-### Step 3 — Backtest first (no API key needed)
-```bash
-python main.py --backtest
-```
-This downloads real BTC historical data and simulates the full strategy. Check the report. If Profit Factor > 1.5 and Win Rate > 45%, the logic is working.
-
-### Step 4 — Verify config
+### 1. Verification
+Before going live, always run the pre-flight check:
 ```bash
 python main.py --check
 ```
 
-### Step 5 — Run on Testnet
+### 2. Live Execution
+Run the live scan for Binance:
 ```bash
-python main.py
+python main.py --binance
 ```
-Watch the logs. Let it run for 1–2 weeks on testnet before touching real money.
 
-### Step 6 — Deploy to Render (24/7)
-1. Push code to GitHub (private repo)
-2. Create new **Background Worker** on render.com
-3. Connect GitHub repo
-4. Add environment variables from `.env` in the Render dashboard
-5. Deploy → runs 24/7 even when laptop is off ✅
-
----
-
-## Adjustable Parameters (config/settings.py)
-
-| Parameter | Default | Meaning |
-|---|---|---|
-| `SYMBOL` | BTCUSDT | What to trade |
-| `CAPITAL_USDT` | 10 | Starting capital |
-| `RISK_PER_TRADE` | 0.02 | 2% max loss per trade |
-| `STOP_LOSS_PCT` | 0.012 | 1.2% stop distance |
-| `TAKE_PROFIT_PCT` | 0.028 | 2.8% target |
-| `MIN_CONFIDENCE` | 40 | Beta score to fire trade |
-| `SR_PROXIMITY_PCT` | 0.012 | How close to zone = "in zone" |
+### 3. Cloud Deployment (Render.com)
+1.  **Push to GitHub**: Keep your repo private.
+2.  **Create Web Service**: Connect your GitHub repo to Render.
+3.  **Build Command**: `pip install -r requirements.txt`
+4.  **Start Command**: `python main.py --binance`
+5.  **24/7 Uptime**: Use [UptimeRobot](https://uptimerobot.com) to ping your Render URL every 5 minutes to keep the `keep_alive.py` heartbeat active.
 
 ---
 
-## What triggers a trade?
-
-**ALL of the following must be true simultaneously:**
-
-1. **Alpha**: SMA50 > SMA200 (or inverse for short)
-2. **Alpha**: ADX > 25 (trending, not ranging)
-3. **Alpha**: Price within 1.2% of recent high or low
-4. **Beta**: At least one pattern (wick/engulf/false breakout) scores ≥ 40
-5. **Risk**: Position notional ≥ $5.50
-6. **Risk**: R:R ≥ 2.0
-7. **Risk**: Daily loss < 3% circuit breaker
-
-If any single condition fails → **no trade**.
-
-This means the bot may sit silent for hours or days. **That is correct behavior.** Rare + accurate beats frequent + random.
+## ⚠️ Risk Disclaimer
+Trading cryptocurrencies involves high risk. This software is provided "as is" for educational purposes. Always trade on **Testnet** for at least 30 days before moving to a live production environment. 
 
 ---
-
-## Telegram Alerts (Optional)
-1. Create a bot via @BotFather on Telegram
-2. Get your Chat ID via @userinfobot
-3. Add both to `.env`
-
-You'll get alerts on every trade execution.
-
----
-
-## Indian Tax Warning ⚠️
-If trading on Binance from India:
-- **1% TDS** is deducted on every sell transaction
-- **30% flat tax** on all crypto profits (no loss offset)
-- With tight margins, fees + TDS can eat profits fast
-- Minimum target per trade must clear: 0.1% fee + 1% TDS = **~1.2% just to break even**
-
-The bot's 2.8% take-profit accounts for this, but be aware.
-
----
-
-## License
-Personal use only. Not financial advice.
+**Build by GodKun. Powered by TradeGOD.**
