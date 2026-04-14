@@ -1,0 +1,137 @@
+╔══════════════════════════════════════════════════════════════╗
+║         T R A D E G O D   —   T H E   D O C T R I N E       ║
+║              Bot Rules. Written for humans.                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+CORE PHILOSOPHY
+──────────────
+"The bot does not predict the future.
+ It only fires when mathematics says the probability is tilted.
+ Survival is the strategy. Profit is a byproduct."
+
+
+═══════════════════════════════════════════════════════════════
+LAYER 1 — ALPHA RULES  (When is the environment worth scanning?)
+═══════════════════════════════════════════════════════════════
+
+RULE A1: Trend Vector (SMA 50 vs SMA 200 on 1h)
+  BULL  → Price > SMA50 > SMA200   → Only BUY signals allowed
+  BEAR  → Price < SMA50 < SMA200   → Only SELL signals allowed
+  VOID  → Mixed / Crossing         → NO TRADE. Bot sleeps.
+
+RULE A2: ADX Strength
+  ADX > 25  → Trending market  → Bot may proceed to Beta scan
+  ADX < 20  → Ranging market   → Bot sleeps. Ranging kills bots.
+
+RULE A3: Structural Proximity
+  Bot only cares when price is within 1.2% of:
+    - Recent 50-bar HIGH  (Resistance zone)
+    - Recent 50-bar LOW   (Support zone)
+  If price is floating in no-man's land → Bot sleeps.
+
+COMBINED ALPHA GATE:
+  All 3 must pass → Zone Active → Pass to Beta
+  Any 1 fails     → Zone Void  → Sleep 5 minutes
+
+
+═══════════════════════════════════════════════════════════════
+LAYER 2 — BETA RULES  (Is there an exact trigger right now?)
+═══════════════════════════════════════════════════════════════
+
+PATTERN HIERARCHY (scored out of 100)
+
+  +25 pts  REJECTION WICK
+           Wick ≥ 62% of total candle range.
+           Body is small (exhaustion, not momentum).
+           Bullish: Long lower wick at support.
+           Bearish: Long upper wick at resistance.
+
+  +25 pts  ENGULFING CANDLE
+           Current body completely swallows previous body.
+           Direction must reverse.
+           Bullish engulf at support → BUY.
+           Bearish engulf at resistance → SELL.
+
+  +20 pts  FALSE BREAKOUT TRAP
+           Price wick broke through key level but closed back inside.
+           This traps retail traders on the wrong side.
+           One of the highest-probability setups in existence.
+
+  +15 pts  RSI ALIGNMENT
+           RSI < 35 (oversold) for BUY signals.
+           RSI > 65 (overbought) for SELL signals.
+           Confirmation, not primary signal.
+
+  +15 pts  VOLUME SPIKE
+           Volume ≥ 1.5x the 20-bar average.
+           Without volume, a pattern is noise.
+
+BETA FIRE THRESHOLD: confidence ≥ 40 pts
+  Below 40 → stalk (check again in 2 min)
+  40–59    → valid signal, proceed to Risk check
+  60–79    → strong signal
+  80–100   → rare, highest probability setup
+
+
+═══════════════════════════════════════════════════════════════
+LAYER 3 — RISK OVERLORD RULES  (Absolute & Non-Negotiable)
+═══════════════════════════════════════════════════════════════
+
+RULE R1: 2% Hard Cap
+  Maximum risk per trade = 2% of current account balance.
+  Position size is calculated FROM stop-loss distance.
+  Not from arbitrary lot sizes.
+
+RULE R2: Minimum R:R = 2.0
+  Take-Profit must be at minimum 2x the Stop-Loss distance.
+  If market structure doesn't allow it → NO TRADE.
+
+RULE R3: Binance $5 Minimum
+  If calculated position notional < $5.50 → NO TRADE.
+  This is a hard exchange limit.
+
+RULE R4: Daily Circuit Breaker
+  If total daily loss ≥ 3% of capital → SHUTDOWN for the day.
+  Return next UTC day. No exceptions. No revenge trading.
+
+RULE R5: 15-Minute Post-Trade Cooldown
+  After ANY executed trade → mandatory 15-min silence.
+  The market will still be there. Your capital won't be
+  if you panic-trade after a loss.
+
+FIXED LEVELS (config/settings.py):
+  Stop Loss     : 1.2% from entry
+  Take Profit   : 2.8% from entry
+  R:R Ratio     : ~2.3x
+
+
+═══════════════════════════════════════════════════════════════
+WHAT THIS BOT IS NOT
+═══════════════════════════════════════════════════════════════
+
+❌ It is NOT a "passive income machine"
+❌ It will NOT win every trade
+❌ It will NOT replace a proper trading education
+❌ It is NOT set-and-forget forever (needs monitoring)
+
+What it IS:
+✅ A disciplined, emotionless rule-follower
+✅ A capital-protection system first, profit system second
+✅ A foundation you can improve with real data over time
+
+
+═══════════════════════════════════════════════════════════════
+REALISTIC EXPECTATIONS  (₹500–₹3000 capital)
+═══════════════════════════════════════════════════════════════
+
+  With $10 (~₹840) starting capital:
+  → Expected trades per week  : 1–5
+  → Risk per trade            : ~$0.20
+  → Target per trade          : ~$0.46
+  → Monthly realistic range   : -$2 to +$8
+
+  The numbers look small. That is intentional.
+  The system is learning. The strategy is being proved.
+  Scale capital only after 3 profitable months.
+
+  "Small consistent wins beat big gambling losses every time."

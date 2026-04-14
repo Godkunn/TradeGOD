@@ -1,0 +1,23 @@
+# Secrets and Environment Variables
+.env
+
+# Logs
+logs/
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDEs
+.vscode/
+.idea/
+
+# Trade data
+trade_log.csv
+
+# OS files
+.DS_Store
+Thumbs.db
