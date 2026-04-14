@@ -6,11 +6,11 @@
 # ============================================================
 
 services:
-  - type: worker           # Background worker — runs 24/7, never sleeps
+  - type: web              # Web Service — compatible with Render Free Tier
     name: tradegod-bot
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
+    startCommand: python main.py --binance
     envVars:
       - key: BINANCE_API_KEY
         sync: false          # Set manually in Render dashboard
