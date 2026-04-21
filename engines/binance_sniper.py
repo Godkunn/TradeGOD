@@ -76,6 +76,7 @@ class BinanceSniper:
         self.wins = 0
         self.losses = 0
         self.pnl = 0.0
+        self.paused = False
 
         # Cache symbol info
         self._step_sizes = {}
@@ -226,6 +227,10 @@ class BinanceSniper:
 
     def _patrol_cycle(self):
         ts = datetime.utcnow().strftime("%H:%M:%S UTC")
+
+        if getattr(self, "paused", False):
+            time.sleep(10)
+            return
 
         # ── Sync capital ──────────────────────────────────────
         balance = self._get_balance()

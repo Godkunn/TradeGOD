@@ -81,6 +81,10 @@ class TelegramUI:
         def handle_query(call):
             if call.data == "btn_portfolio":
                 self._send_portfolio()
+            elif call.data == "btn_status":
+                self._send_status()
+            elif call.data == "btn_toggle_pause":
+                self._toggle_pause(call.message)
             elif call.data == "btn_close_trade":
                 self._emergency_close(call.message)
             self.bot.answer_callback_query(call.id)
@@ -88,10 +92,46 @@ class TelegramUI:
     def _main_menu(self):
         markup = InlineKeyboardMarkup(row_width=2)
         btn1 = InlineKeyboardButton("📊 View Portfolio", callback_data="btn_portfolio")
-        btn2 = InlineKeyboardButton("🚨 KILL SWITCH (Close All)", callback_data="btn_close_trade")
-        markup.add(btn1)
-        markup.add(btn2) # Red button on its own line
+        btn2 = InlineKeyboardButton("⚙️ System Stats", callback_data="btn_status")
+        btn3 = InlineKeyboardButton("⏸️ Play/Pause", callback_data="btn_toggle_pause")
+        btn4 = InlineKeyboardButton("🚨 KILL SWITCH", callback_data="btn_close_trade")
+        markup.add(btn1, btn2)
+        markup.add(btn3)
+        markup.add(btn4)
         return markup
+
+    def _send_status(self):
+        """Reports the overall bot trading performance and current settings"""
+        mode = "TESTNET" if self.sniper.client.TESTNET else "LIVE"
+        state = "⏸️ PAUSED" if getattr(self.sniper, "paused", False) else "🟢 PATROLLING"
+        
+        win_rate = 0
+        if self.sniper.total_trades > 0:
+            win_rate = (self.sniper.wins / self.sniper.total_trades) * 100
+            
+        msg = (
+            "<b><pre>⚙️ SYSTEM STATUS</pre></b>\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"<b>Status :</b> <code>{state}</code>\n"
+            f"<b>Mode   :</b> <code>{mode}</code>\n"
+            f"<b>Pairs  :</b> <code>{len(SYMBOLS)} active</code>\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"<b>Total Trades :</b> <code>{self.sniper.total_trades}</code>\n"
+            f"<b>Wins/Losses  :</b> <code>{self.sniper.wins} / {self.sniper.losses}</code>\n"
+            f"<b>Win Rate     :</b> <code>{win_rate:.1f}%</code>\n"
+            f"<b>Gross Net PNL:</b> <code>${self.sniper.pnl:.2f}</code>\n"
+        )
+        self._safe_send_message(self.chat_id, msg, reply_markup=self._main_menu())
+
+    def _toggle_pause(self, message):
+        """Toggles the execution loop without terminating the program"""
+        is_paused = getattr(self.sniper, "paused", False)
+        self.sniper.paused = not is_paused
+        
+        if self.sniper.paused:
+            self._safe_send_message(self.chat_id, "⏸️ <b>BOT PAUSED</b>\nThe system will continue fetching data but will NOT execute trades.", reply_markup=self._main_menu())
+        else:
+            self._safe_send_message(self.chat_id, "▶️ <b>BOT RESUMED</b>\nThe system is now actively hunting for executing conditions.", reply_markup=self._main_menu())
 
     def _send_portfolio(self):
         """Fetches live data and calculates real-time PNL of the active trade"""
