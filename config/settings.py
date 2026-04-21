@@ -18,6 +18,7 @@ BINANCE_TESTNET    = os.getenv("BINANCE_MODE", "testnet").lower() == "testnet"
 SYMBOLS     = [s.strip() for s in os.getenv("SYMBOLS", "BTCUSDT,ETHUSDT").split(",") if s.strip()]
 SYMBOL      = SYMBOLS[0] if SYMBOLS else "BTCUSDT" # For backwards compatibility (backtester)
 TIMEFRAME   = "5m"          # Primary chart (Beta sniper)
+ITF         = "15m"         # Intermediate timeframe (Momentum check)
 HTF         = "1h"          # Higher timeframe (Alpha context)
 
 # ── CAPITAL ─────────────────────────────────────────────────
@@ -32,10 +33,10 @@ TAKE_PROFIT_PCT = 0.028      # 2.8% target  (RR ≈ 2.3x)
 CANDLES_FOR_ALPHA = 200      # Candles needed to compute SMAs
 CANDLES_FOR_BETA  = 50       # Candles needed for pattern scan
 SR_WINDOW         = 50       # Bars to determine support/resistance
-SR_PROXIMITY_PCT  = 0.012    # Within 1.2% of a boundary = "zone"
+SR_PROXIMITY_PCT  = 0.015    # Within 1.5% of a boundary = "zone"
 REJECTION_WICK_RATIO = 0.62  # Wick must be 62% of total candle range
 MIN_CONFIDENCE = 40       # Minimum confidence score (0-100) to trigger Beta sniper
-SPOT_MODE_ONLY = True   # If True, only take signals that apply to spot trading (no shorts)
+SPOT_MODE_ONLY = False   # Set to False to allow SHORTS (DOWN trades). Required for full doctrine.
 
 # ── TIMING ──────────────────────────────────────────────────
 LOOP_SLEEP_VOID    = 300     # Sleep (s) when Alpha says VOID

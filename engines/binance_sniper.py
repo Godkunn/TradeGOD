@@ -20,7 +20,7 @@ from binance.exceptions import BinanceAPIException
 
 from config.settings import (
     BINANCE_API_KEY, BINANCE_SECRET_KEY, BINANCE_TESTNET,
-    SYMBOLS, TIMEFRAME, HTF,
+    SYMBOLS, TIMEFRAME, ITF, HTF, SPOT_MODE_ONLY,
     CAPITAL_USDT,
     CANDLES_FOR_ALPHA, CANDLES_FOR_BETA,
     LOOP_SLEEP_VOID, LOOP_SLEEP_STALK, COOLDOWN_AFTER_TRADE,
@@ -254,9 +254,10 @@ class BinanceSniper:
         # ── MULTI-MARKET SCAN ─────────────────────────────────
         valid_setups = []
         for sym in SYMBOLS:
-            # logger.info(f"[{ts}] 🔍 Scanning {sym}...")
+            # Render Free Tier / GitHub Action API Safeguard
+            time.sleep(1.5)
             
-            # ── LAYER 1 : ALPHA FILTER ─────────────
+            # ── LAYER 1 : ALPHA FILTER (HTF 1H) ─────────────
             try:
                 htf_df     = self._get_klines(sym, HTF, CANDLES_FOR_ALPHA)
                 alpha      = AlphaFilter(htf_df)
@@ -268,7 +269,15 @@ class BinanceSniper:
             if not alpha_out["zone_active"]:
                 continue
 
-            # ── LAYER 2 : BETA FILTER ──────────────
+            # ── LAYER 1.5 : INTERMEDIATE MOMENTUM (ITF 15m) ─────────────
+            try:
+                itf_df   = self._get_klines(sym, ITF, 50)
+                beta_itf = BetaFilter(itf_df)
+                itf_rsi  = beta_itf.rsi_zone()
+            except Exception as e:
+                itf_rsi = "NEUTRAL"
+
+            # ── LAYER 2 : BETA FILTER (TIMEFRAME 5m) ──────────────
             try:
                 ltf_df   = self._get_klines(sym, TIMEFRAME, max(CANDLES_FOR_BETA, 50))
                 beta     = BetaFilter(ltf_df)
@@ -282,7 +291,9 @@ class BinanceSniper:
                 beta_out["direction"] = "NONE"
             if alpha_out["vector"] == "BEAR" and beta_out["direction"] == "BUY":
                 beta_out["direction"] = "NONE"
-            if beta_out["direction"] == "SELL":
+                
+            # Block SELL if we are explicitly running in Spot Only Mode
+            if SPOT_MODE_ONLY and beta_out["direction"] == "SELL":
                 beta_out["direction"] = "NONE"
 
             if beta_out["direction"] != "NONE" and beta_out["confidence"] >= MIN_CONFIDENCE:
@@ -339,15 +350,31 @@ class BinanceSniper:
             f"SL={stop_loss} | TP={take_profit} | "
             f"R:R={risk_out['rr_ratio']} | Risk=${risk_out['risk_usdt']}"
         )
+        
+        vector_emoji = "🐂 BULL" if alpha_out['vector'] == "BULL" else "🐻 BEAR"
+        strategy_name = beta_out['patterns'][-1].replace("_", " ") if beta_out['patterns'] else "Reversal Zone"
+        
         self._notify(
-            f"🔥 <b>TRADE SIGNAL [{target_sym}]</b>\n"
-            f"Dir    : {direction}\n"
-            f"Entry  : {entry}\n"
-            f"SL     : {stop_loss}\n"
-            f"TP     : {take_profit}\n"
-            f"R:R    : {risk_out['rr_ratio']}\n"
-            f"Conf   : {beta_out['confidence']}/100\n"
-            f"Patt   : {', '.join(beta_out['patterns'])}"
+            f"🔥 <b>TRADE DIRECTIVE: {target_sym} (RECALIBRATED)</b>\n\n"
+            f"<b>1. Market Status - Vector Alignment</b>\n"
+            f"• Current State: Price is in a {vector_emoji} macro-vector.\n"
+            f"• Technical Zone: Established <b>{alpha_out['boundary']}</b> matrix nearby.\n\n"
+            
+            f"<b>2. Momentum & Strength (Multi-TF)</b>\n"
+            f"• 15m Momentum (ITF): <code>{itf_rsi}</code>\n"
+            f"• Confluence: {beta_out['confidence']}% Beta Signature Match\n\n"
+            
+            f"<b>3. The Strategy (Target Lock)</b>\n"
+            f"• Execution Math: The <b>{strategy_name}</b> sequence is active.\n"
+            f"• Reward/Risk Matrix: {risk_out['rr_ratio']}x Output Potential\n\n"
+            
+            f"<b>4. ACTION PLAN</b>\n"
+            f"• Position Cost: <code>${quantity * entry:,.2f}</code>\n"
+            f"• <b>ENTRY POINT:</b> <code>{entry}</code>\n"
+            f"• <b>STOP LOSS:</b> <code>{stop_loss}</code>\n"
+            f"• <b>TAKE PROFIT:</b> <code>{take_profit}</code>\n"
+            f"• <b>TRIGGER:</b> Wait for platform order-fill completion.\n"
+            f"• <b>ACTION:</b> <b>{direction}</b>"
         )
 
         order = self._place_market_order(target_sym, direction, quantity)

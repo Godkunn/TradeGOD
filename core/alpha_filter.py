@@ -93,13 +93,13 @@ class AlphaFilter:
 
     def adx_strength(self) -> str:
         """
-        ADX > 25  → trending market  → go with trend
+        ADX > 20  → trending market  → go with trend
         ADX < 20  → ranging market   → avoid
         """
         adx_val = self.df["adx"].iloc[-1]
         if pd.isna(adx_val):
             return "WEAK"
-        return "STRONG" if adx_val > 25 else "WEAK"
+        return "STRONG" if adx_val > 20 else "WEAK"
 
     def boundary_proximity(self) -> str:
         """

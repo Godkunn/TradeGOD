@@ -67,12 +67,11 @@ Run the live scan for Binance:
 python main.py --binance
 ```
 
-### 3. Cloud Deployment (Render.com)
+### 3. Cloud Deployment
 1.  **Push to GitHub**: Keep your repo private.
-2.  **Create Web Service**: Connect your GitHub repo to Render.
+2.  **Create Web Service**: Connect your GitHub repo
 3.  **Build Command**: `pip install -r requirements.txt`
 4.  **Start Command**: `python main.py --binance`
-5.  **24/7 Uptime**: Use [UptimeRobot](https://uptimerobot.com) to ping your Render URL every 5 minutes to keep the `keep_alive.py` heartbeat active.
 
 ---
 
