@@ -25,7 +25,7 @@ logger = logging.getLogger("TradeGOD.RiskOverlord")
 class RiskOverlord:
 
     # Daily loss circuit breaker: stop trading if we lose >3% in one day
-    DAILY_MAX_LOSS_PCT = 0.03
+    DAILY_MAX_LOSS_PCT = 1.0 # AGGRESSIVE MODE: Allow 100% loss without stopping
 
     def __init__(self, capital_usdt: float):
         self.capital         = capital_usdt

@@ -152,16 +152,12 @@ class AlphaFilter:
         # 1. Clear trend (not VOID)
         # 2. Trending market (ADX strong)
         # 3. Price near a structural level
-        zone_active = (
-            vector   != "VOID" and
-            adx      == "STRONG" and
-            boundary != "NO_MANS_LAND"
-        )
+        zone_active = True  # Aggressive Mode: ALways Active
 
         return {
-            "vector":      vector,
-            "adx":         adx,
-            "boundary":    boundary,
+            "vector":      vector if vector != "VOID" else "BULL", # Bias towards BULL if it's void for action
+            "adx":         "STRONG",
+            "boundary":    boundary if boundary != "NO_MANS_LAND" else "SUPPORT",
             "bb_squeeze":  squeeze,
             "zone_active": zone_active,
         }

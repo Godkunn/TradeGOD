@@ -23,25 +23,26 @@ HTF         = "1h"          # Higher timeframe (Alpha context)
 
 # ── CAPITAL ─────────────────────────────────────────────────
 CAPITAL_USDT    = float(os.getenv("CAPITAL_USDT", 10))
-RISK_PER_TRADE  = float(os.getenv("RISK_PER_TRADE", 0.02))   # 2%
-MIN_RR_RATIO    = 2.0        # Minimum reward-to-risk required
+# To take massive trades with small capital, RISK_PER_TRADE must be <= STOP_LOSS_PCT to keep notional <= capital
+RISK_PER_TRADE  = float(os.getenv("RISK_PER_TRADE", 0.95))   # 95% risk! (Aggressive)
+MIN_RR_RATIO    = 0.5        # Dropped from 2.0 to take more trades
 MIN_NOTIONAL    = 5.5        # Binance rejects orders below ~$5
-STOP_LOSS_PCT   = 0.012      # 1.2% stop distance
-TAKE_PROFIT_PCT = 0.028      # 2.8% target  (RR ≈ 2.3x)
+STOP_LOSS_PCT   = 0.95       # 95% stop distance (allows using almost 100% capital)
+TAKE_PROFIT_PCT = 0.95       # 95% target
 
 # ── FILTERS ─────────────────────────────────────────────────
 CANDLES_FOR_ALPHA = 200      # Candles needed to compute SMAs
 CANDLES_FOR_BETA  = 50       # Candles needed for pattern scan
 SR_WINDOW         = 50       # Bars to determine support/resistance
-SR_PROXIMITY_PCT  = 0.015    # Within 1.5% of a boundary = "zone"
-REJECTION_WICK_RATIO = 0.62  # Wick must be 62% of total candle range
-MIN_CONFIDENCE = 40       # Minimum confidence score (0-100) to trigger Beta sniper
+SR_PROXIMITY_PCT  = 1.0      # VERY high proximity -> almost always in a zone
+REJECTION_WICK_RATIO = 0.1   # Tiny wick triggers execution
+MIN_CONFIDENCE = 0        # Execute even with low confidence
 SPOT_MODE_ONLY = False   # Set to False to allow SHORTS (DOWN trades). Required for full doctrine.
 
 # ── TIMING ──────────────────────────────────────────────────
-LOOP_SLEEP_VOID    = 300     # Sleep (s) when Alpha says VOID
-LOOP_SLEEP_STALK   = 120     # Sleep (s) when stalking but no trigger
-COOLDOWN_AFTER_TRADE = 900   # 15-min buffer after any executed trade
+LOOP_SLEEP_VOID    = 2       # Sleep (s) when Alpha says VOID (Aggressive stalk)
+LOOP_SLEEP_STALK   = 2       # Sleep (s) when stalking but no trigger (Aggressive)
+COOLDOWN_AFTER_TRADE = 10    # 10-sec buffer after any executed trade
 
 # ── TELEGRAM ────────────────────────────────────────────────
 TELEGRAM_TOKEN   = os.getenv("TELEGRAM_BOT_TOKEN", "")

@@ -211,25 +211,24 @@ class BetaFilter:
         # Collect all pattern votes
         pattern_votes = [v for v in [wick, engulf, false_break] if v != 0]
         if not pattern_votes:
-            return {"direction": "NONE", "confidence": 0,
-                    "patterns": [], "rsi": rsi, "volume_spike": vol_spike}
+            # AGGRESSIVE MODE: Force a trade based on trend if no local patterns
+            direction = "BUY" if alpha_vector == "BULL" else "SELL"
+        else:
+            direction_sum = sum(pattern_votes)
+            direction = "BUY" if direction_sum > 0 else "SELL"
 
-        # Majority direction (most patterns agree)
-        direction_sum = sum(pattern_votes)
-        direction = "BUY" if direction_sum > 0 else "SELL"
+        # AGGRESSIVE MODE: Disable strict boundary and trend enforcement 
+        # (Let the bot trade freely)
+        # if boundary == "SUPPORT"    and direction == "SELL": direction = "NONE"
+        # if boundary == "RESISTANCE" and direction == "BUY":  direction = "NONE"
 
-        # Ensure direction is consistent with boundary
-        if boundary == "SUPPORT"    and direction == "SELL": direction = "NONE"
-        if boundary == "RESISTANCE" and direction == "BUY":  direction = "NONE"
-
-        # 🔥 NEW: Enforce Alpha Trend Alignment (Doctrine Rule A1)
-        if alpha_vector == "BULL" and direction == "SELL":
-            direction = "NONE"
-        if alpha_vector == "BEAR" and direction == "BUY":
-            direction = "NONE"
+        # if alpha_vector == "BULL" and direction == "SELL":
+        #     direction = "NONE"
+        # if alpha_vector == "BEAR" and direction == "BUY":
+        #     direction = "NONE"
+        
         if direction == "NONE":
-            return {"direction": "NONE", "confidence": 0,
-                    "patterns": [], "rsi": rsi, "volume_spike": vol_spike}
+            direction = "BUY" # Ultimate fallback
 
         # ── Confidence score ────────────────────────────────
         score = 0
