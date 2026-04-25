@@ -237,16 +237,21 @@ class BinanceSniper:
         self.risk.update_capital(balance)
 
         # --- PATCH 5: POSITION TRACKING (BLOCK OVERLAPPING TRADES) ---
-        # If we currently hold more than $5 of the base asset of ANY symbol, skip scanning.
+        # Instead of checking testnet balances (which start at 1 BTC), we check for open SL/TP orders
         active_position = False
         for sym in SYMBOLS:
-            base_asset = sym.replace("USDT", "")
             try:
-                base_bal = float(self.client.get_asset_balance(asset=base_asset)["free"])
-                current_price = self._get_price(sym)
-                # FIX: Binance testnet gives default 1 BTC, so we only block if total_trades > 0
-                if self.total_trades > 0 and (base_bal * current_price) > 5.0:
-                    logger.info(f"[{ts}] ⏳ Position Active ({base_bal:.4f} {base_asset}). Waiting for SL/TP exit...")
+                open_orders = self.client.get_open_orders(symbol=sym)
+                if open_orders:
+                    entry_price = self._get_average_entry_price(sym)
+                    current_price = self._get_price(sym)
+                    
+                    if entry_price > 0:
+                        pnl_pct = ((current_price - entry_price) / entry_price) * 100
+                        logger.info(f"[{ts}] ⏳ Position Active on {sym}. Live PnL: {pnl_pct:+.2f}% | Waiting for SL/TP exit...")
+                    else:
+                        logger.info(f"[{ts}] ⏳ Position Active on {sym}. Waiting for SL/TP exit...")
+                        
                     active_position = True
                     break
             except Exception:
